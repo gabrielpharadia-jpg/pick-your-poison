@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Pick Your Poison 💌</title>
+<meta name="description" content="A little something I put together for you 😌" />
+<meta property="og:title" content="Pick Your Poison 💌" />
+<meta property="og:description" content="A little something I put together for you 😌" />
+<meta property="og:type" content="website" />
+<meta name="theme-color" content="#0b0713" />
+<style>
+  html, body { margin: 0; padding: 0; background: #0b0713; }
+  * { -webkit-tap-highlight-color: transparent; }
+</style>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.6/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect } = React;
+
+
+const OPTIONS = [
+  {
+    id: "meowwolf",
+    emoji: "🎨",
+    tag: "Option 1",
+    title: "Meow Wolf: Radio Tave",
+    hook: "Cause I remember you saying you like museums…",
+    body:
+      "Not your regular walk-around-and-stare-at-paintings museum lol. Something immersive, weird, colorful and fun for us to explore.",
+    accent: "#9B4DE0",
+    bg: ["#2b1055", "#7597de"],
+    glow: "rgba(155,77,224,0.55)",
+    votes: [
+      { emoji: "😍", label: "Yeahhh" },
+      { emoji: "🤔", label: "I could be convinced" },
+      { emoji: "❤️", label: "Save this one for later" },
+    ],
+  },
+  {
+    id: "beatthebomb",
+    emoji: "💣",
+    tag: "Option 2",
+    title: "Beat The Bomb",
+    hook: "Let's see what you got.",
+    body:
+      "Something cool, interactive and a little competitive. I don't know how competitive you are yet… but I guess there's only one way to find out 😂. Just know if we're on the same team, I expect you to carry your weight.",
+    accent: "#FF4D4D",
+    bg: ["#3a0d0d", "#ff8a3d"],
+    glow: "rgba(255,77,77,0.5)",
+    votes: [
+      { emoji: "💣", label: "Say less, I'm ready" },
+      { emoji: "👀", label: "Maybeeee" },
+      { emoji: "❤️", label: "Save it" },
+    ],
+  },
+  {
+    id: "candles",
+    emoji: "🕯️",
+    tag: "Option 3",
+    title: "Candles & Cocktails",
+    hook: "Soft life activities.",
+    body:
+      "This one is giving relaxed and chill. Make our candles, sip something, talk and just enjoy each other's company. Plus we leave with candles, so technically we're being productive. 😂",
+    accent: "#E8A33D",
+    bg: ["#3d2410", "#f0b979"],
+    glow: "rgba(232,163,61,0.5)",
+    votes: [
+      { emoji: "🕯️", label: "This is cuteeee" },
+      { emoji: "🤔", label: "I wouldn't say no" },
+      { emoji: "❤️", label: "Another time" },
+    ],
+  },
+  {
+    id: "vino",
+    emoji: "🌹",
+    tag: "Option 4",
+    title: "Vino, Petals & Paint",
+    hook: "We just vibing.",
+    body:
+      "Wine. Flowers. Painting. Nothing too serious. Just us chilling, laughing and probably realizing neither one of us needs to pursue a career in art. 😂 And if your painting comes out better than mine, mind your business.",
+    accent: "#E04D7A",
+    bg: ["#4a0d24", "#e879a4"],
+    glow: "rgba(224,77,122,0.5)",
+    votes: [
+      { emoji: "🌹", label: "Yes please" },
+      { emoji: "🍷", label: "I'm here for the wine 😂" },
+      { emoji: "❤️", label: "Save it" },
+    ],
+  },
+  {
+    id: "glow",
+    emoji: "🌈",
+    tag: "Option 5",
+    title: "Glow & Flow: UV Paint Night",
+    hook: "A little glow moment.",
+    body:
+      "Okayyyy, regular paint night… but make it glow. Black lights, music, painting and a little drinky drink. Something playful without us having to do too much.",
+    accent: "#3DE0C8",
+    bg: ["#0d1f3a", "#7a3dff"],
+    glow: "rgba(61,224,200,0.5)",
+    votes: [
+      { emoji: "🌈", label: "I'm feeling this one" },
+      { emoji: "👀", label: "Hmmm, maybe" },
+      { emoji: "❤️", label: "Put it in the vault" },
+    ],
+  },
+  {
+    id: "shotofart",
+    emoji: "🎨",
+    tag: "Option 6",
+    title: "Shot Of Art",
+    hook: "You're a G… allegedly. 😂",
+    body:
+      "I haven't independently verified these claims, Miss Chelly. 😂 We get to throw paint, make a mess and create something together. So here's your opportunity to prove yourself. 😂",
+    accent: "#5DB8FF",
+    bg: ["#12143a", "#ff5db8"],
+    glow: "rgba(93,184,255,0.5)",
+    votes: [
+      { emoji: "😏", label: "Say less" },
+      { emoji: "😂", label: "You play too much" },
+      { emoji: "❤️", label: "Save this one" },
+    ],
+  },
+];
+
+const TOTAL = OPTIONS.length + 2; // welcome + options + verdict
+
+// ⬇️ Pha: drop your number ("+14015551234") OR your email here.
+// Her result will text/email straight to you. Leave "" to use copy-only.
+const SEND_TO = "+14016632570";
+
+function PickYourPoison() {
+  const [step, setStep] = useState(0);
+  const [dir, setDir] = useState(1);
+  const [votes, setVotes] = useState({}); // optionId -> vote index
+  const [finalPick, setFinalPick] = useState(null);
+  const [animKey, setAnimKey] = useState(0);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setAnimKey((k) => k + 1);
+  }, [step]);
+
+  useEffect(() => {
+    setCopied(false);
+  }, [finalPick]);
+
+  const CONFETTI = React.useMemo(
+    () =>
+      Array.from({ length: 44 }).map(() => ({
+        left: Math.random() * 100,
+        delay: Math.random() * 0.35,
+        dur: 1.6 + Math.random() * 1.2,
+        size: 7 + Math.random() * 8,
+        rot: Math.random() * 360,
+        color: ["#FFD84D", "#FF4D8A", "#4DE0C8", "#9B4DE0", "#5DB8FF", "#fff"][
+          Math.floor(Math.random() * 6)
+        ],
+        round: Math.random() > 0.5,
+      })),
+    []
+  );
+
+  const buildSummary = () => {
+    const pick = OPTIONS.find((o) => o.id === finalPick);
+    const lines = [
+      "Chelly's verdict 🌹",
+      pick ? `👑 Final pick: ${pick.emoji} ${pick.title}` : "👑 Still deciding…",
+      "—",
+      ...OPTIONS.map((o) => {
+        const v = votes[o.id] != null ? o.votes[votes[o.id]] : null;
+        return `${o.emoji} ${o.title}: ${v ? `${v.emoji} ${v.label}` : "no vote"}`;
+      }),
+    ];
+    return lines.join("\n");
+  };
+
+  const copyAnswer = async () => {
+    const text = buildSummary();
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand("copy");
+        setCopied(true);
+      } catch {
+        setCopied(false);
+      }
+      document.body.removeChild(ta);
+    }
+  };
+
+  const sendResult = () => {
+    const body = encodeURIComponent(buildSummary());
+    let url;
+    if (SEND_TO.includes("@")) {
+      url = `mailto:${SEND_TO}?subject=${encodeURIComponent(
+        "Chelly's date verdict 🌹"
+      )}&body=${body}`;
+    } else {
+      const num = SEND_TO.replace(/[^\d+]/g, "");
+      const sep = /iP(hone|ad|od)|Mac/.test(navigator.userAgent) ? "&" : "?";
+      url = `sms:${num}${sep}body=${body}`;
+    }
+    window.location.href = url;
+  };
+
+
+  const go = (delta) => {
+    setDir(delta);
+    setStep((s) => Math.max(0, Math.min(TOTAL - 1, s + delta)));
+  };
+
+  const reset = () => {
+    setDir(-1);
+    setVotes({});
+    setFinalPick(null);
+    setStep(0);
+  };
+
+  const isWelcome = step === 0;
+  const isVerdict = step === TOTAL - 1;
+  const option = !isWelcome && !isVerdict ? OPTIONS[step - 1] : null;
+
+  const accent = option
+    ? option.accent
+    : isVerdict
+    ? "#E04D7A"
+    : "#E8A33D";
+  const bg = option
+    ? option.bg
+    : isVerdict
+    ? ["#3a0d2b", "#e879a4"]
+    : ["#2b1533", "#e8a33d"];
+  const glow = option ? option.glow : "rgba(224,77,122,0.5)";
+
+  const wrap = {
+    minHeight: "100vh",
+    width: "100%",
+    boxSizing: "border-box",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "20px 16px 28px",
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif',
+    background: `radial-gradient(120% 90% at 50% 0%, ${bg[1]}22 0%, transparent 55%), linear-gradient(165deg, ${bg[0]} 0%, #0b0713 78%)`,
+    transition: "background 600ms ease",
+    color: "#fff",
+  };
+
+  const card = {
+    width: "100%",
+    maxWidth: 440,
+    background: "rgba(255,255,255,0.05)",
+    border: "1px solid rgba(255,255,255,0.12)",
+    borderRadius: 28,
+    padding: "26px 22px 24px",
+    boxSizing: "border-box",
+    boxShadow: `0 24px 60px -20px ${glow}, inset 0 1px 0 rgba(255,255,255,0.08)`,
+    backdropFilter: "blur(10px)",
+  };
+
+  const progressWrap = {
+    width: "100%",
+    maxWidth: 440,
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 16,
+  };
+
+  const dots = (
+    <div style={{ display: "flex", gap: 6, flex: 1 }}>
+      {Array.from({ length: TOTAL }).map((_, i) => (
+        <div
+          key={i}
+          style={{
+            flex: 1,
+            height: 5,
+            borderRadius: 99,
+            background:
+              i <= step ? accent : "rgba(255,255,255,0.14)",
+            transition: "background 300ms ease",
+          }}
+        />
+      ))}
+    </div>
+  );
+
+  const btnBase = {
+    border: "none",
+    cursor: "pointer",
+    fontWeight: 700,
+    fontFamily: "inherit",
+    borderRadius: 99,
+    transition: "transform 140ms ease, box-shadow 200ms ease, opacity 200ms",
+  };
+
+  const enterAnim = {
+    animation: `${dir >= 0 ? "slideNext" : "slideBack"} 420ms cubic-bezier(.22,.9,.28,1) both`,
+  };
+
+  return (
+    <div style={wrap}>
+      <style>{`
+        @keyframes slideNext { from { opacity:0; transform: translateX(34px) scale(.98);} to {opacity:1; transform:none;} }
+        @keyframes slideBack { from { opacity:0; transform: translateX(-34px) scale(.98);} to {opacity:1; transform:none;} }
+        @keyframes floaty { 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-8px);} }
+        @keyframes pop { 0%{ transform: scale(.6); opacity:0;} 60%{ transform: scale(1.12);} 100%{ transform: scale(1); opacity:1;} }
+        @keyframes confettiFall { 0%{ transform: translateY(-12vh) rotate(0deg); opacity:1;} 100%{ transform: translateY(105vh) rotate(720deg); opacity:0;} }
+        .pyp-btn:active { transform: scale(.96); }
+        @media (prefers-reduced-motion: reduce){
+          *{ animation-duration:.001ms !important; }
+        }
+      `}</style>
+
+      {isVerdict && finalPick && (
+        <div
+          key={"confetti-" + finalPick}
+          style={{
+            position: "fixed",
+            inset: 0,
+            pointerEvents: "none",
+            overflow: "hidden",
+            zIndex: 50,
+          }}
+        >
+          {CONFETTI.map((c, i) => (
+            <span
+              key={i}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: c.left + "%",
+                width: c.size,
+                height: c.size,
+                background: c.color,
+                borderRadius: c.round ? "50%" : 2,
+                transform: `rotate(${c.rot}deg)`,
+                animation: `confettiFall ${c.dur}s ${c.delay}s ease-in forwards`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {!isWelcome && (
+        <div style={progressWrap}>
+          {dots}
+          <span
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: "rgba(255,255,255,0.65)",
+              whiteSpace: "nowrap",
+              letterSpacing: 0.3,
+            }}
+          >
+            {step + 1} of {TOTAL}
+          </span>
+        </div>
+      )}
+
+      <div key={animKey} style={{ ...card, ...enterAnim }}>
+        {/* WELCOME */}
+        {isWelcome && (
+          <div style={{ textAlign: "center", padding: "8px 4px" }}>
+            <div
+              style={{
+                fontSize: 52,
+                marginBottom: 6,
+                animation: "floaty 3.4s ease-in-out infinite",
+              }}
+            >
+              👀
+            </div>
+            <div
+              style={{
+                fontSize: 13,
+                letterSpacing: 2,
+                fontWeight: 700,
+                color: accent,
+                marginBottom: 8,
+              }}
+            >
+              CHELLY, PICK YOUR POISON
+            </div>
+            <h1
+              style={{
+                fontSize: 30,
+                lineHeight: 1.15,
+                margin: "0 0 14px",
+                fontWeight: 800,
+              }}
+            >
+              A few things I think<br />you'll hopefully like 😌
+            </h1>
+            <p
+              style={{
+                fontSize: 15.5,
+                lineHeight: 1.55,
+                color: "rgba(255,255,255,0.82)",
+                margin: "0 auto 26px",
+                maxWidth: 340,
+              }}
+            >
+              Vote your heart on each one, then give me your final verdict.
+              I wanted to make sure you had a say — so you're fully enjoying
+              it too. 💛
+            </p>
+            <button
+              className="pyp-btn"
+              onClick={() => go(1)}
+              style={{
+                ...btnBase,
+                fontSize: 17,
+                padding: "16px 34px",
+                color: "#1a0e22",
+                background: `linear-gradient(135deg, #fff 0%, ${accent} 160%)`,
+                boxShadow: `0 14px 30px -8px ${glow}`,
+              }}
+            >
+              Start choosing 💌
+            </button>
+            <p
+              style={{
+                fontSize: 12,
+                color: "rgba(255,255,255,0.45)",
+                marginTop: 20,
+                fontStyle: "italic",
+              }}
+            >
+              Voting does not guarantee democracy. I still reserve the right to
+              surprise you. 😂
+            </p>
+          </div>
+        )}
+
+        {/* OPTION SCREENS */}
+        {option && (
+          <div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                marginBottom: 16,
+              }}
+            >
+              <div
+                style={{
+                  width: 58,
+                  height: 58,
+                  flexShrink: 0,
+                  borderRadius: 18,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 30,
+                  background: `linear-gradient(135deg, ${option.accent}, ${option.accent}66)`,
+                  boxShadow: `0 10px 24px -8px ${glow}`,
+                }}
+              >
+                {option.emoji}
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    letterSpacing: 1.5,
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    color: accent,
+                  }}
+                >
+                  {option.tag}
+                </div>
+                <h2
+                  style={{
+                    fontSize: 22,
+                    margin: "2px 0 0",
+                    fontWeight: 800,
+                    lineHeight: 1.1,
+                  }}
+                >
+                  {option.title}
+                </h2>
+              </div>
+            </div>
+
+            <p
+              style={{
+                fontStyle: "italic",
+                fontSize: 15,
+                color: accent,
+                margin: "0 0 8px",
+                fontWeight: 600,
+              }}
+            >
+              {option.hook}
+            </p>
+            <p
+              style={{
+                fontSize: 15,
+                lineHeight: 1.55,
+                color: "rgba(255,255,255,0.82)",
+                margin: "0 0 20px",
+              }}
+            >
+              {option.body}
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {option.votes.map((v, i) => {
+                const selected = votes[option.id] === i;
+                return (
+                  <button
+                    key={i}
+                    className="pyp-btn"
+                    onClick={() =>
+                      setVotes((p) => ({ ...p, [option.id]: i }))
+                    }
+                    style={{
+                      ...btnBase,
+                      borderRadius: 16,
+                      textAlign: "left",
+                      padding: "14px 16px",
+                      fontSize: 15.5,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      color: selected ? "#1a0e22" : "#fff",
+                      background: selected
+                        ? `linear-gradient(135deg, #fff, ${accent})`
+                        : "rgba(255,255,255,0.07)",
+                      border: selected
+                        ? `1px solid ${accent}`
+                        : "1px solid rgba(255,255,255,0.14)",
+                      boxShadow: selected
+                        ? `0 10px 24px -10px ${glow}`
+                        : "none",
+                    }}
+                  >
+                    <span style={{ fontSize: 20 }}>{v.emoji}</span>
+                    <span style={{ flex: 1 }}>{v.label}</span>
+                    {selected && <span style={{ fontSize: 16 }}>✓</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* VERDICT */}
+        {isVerdict && (
+          <div>
+            <div style={{ textAlign: "center", marginBottom: 18 }}>
+              <div
+                style={{
+                  fontSize: 44,
+                  animation: "floaty 3.4s ease-in-out infinite",
+                }}
+              >
+                🌹
+              </div>
+              <div
+                style={{
+                  fontSize: 12,
+                  letterSpacing: 2,
+                  fontWeight: 700,
+                  color: accent,
+                }}
+              >
+                THE VERDICT
+              </div>
+              <h2 style={{ fontSize: 24, margin: "4px 0 0", fontWeight: 800 }}>
+                What's your heart telling you?
+              </h2>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {OPTIONS.map((o) => {
+                const picked = finalPick === o.id;
+                const voted =
+                  votes[o.id] != null ? o.votes[votes[o.id]] : null;
+                return (
+                  <button
+                    key={o.id}
+                    className="pyp-btn"
+                    onClick={() => setFinalPick(o.id)}
+                    style={{
+                      ...btnBase,
+                      borderRadius: 16,
+                      textAlign: "left",
+                      padding: "12px 14px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      color: picked ? "#1a0e22" : "#fff",
+                      background: picked
+                        ? `linear-gradient(135deg, #fff, ${o.accent})`
+                        : "rgba(255,255,255,0.06)",
+                      border: picked
+                        ? `1px solid ${o.accent}`
+                        : "1px solid rgba(255,255,255,0.12)",
+                      boxShadow: picked
+                        ? `0 10px 26px -10px ${o.glow}`
+                        : "none",
+                    }}
+                  >
+                    <span style={{ fontSize: 22 }}>{o.emoji}</span>
+                    <span style={{ flex: 1 }}>
+                      <span
+                        style={{
+                          display: "block",
+                          fontSize: 15,
+                          fontWeight: 800,
+                        }}
+                      >
+                        {o.title}
+                      </span>
+                      <span
+                        style={{
+                          display: "block",
+                          fontSize: 12,
+                          opacity: 0.7,
+                          fontWeight: 600,
+                        }}
+                      >
+                        {voted
+                          ? `You said: ${voted.emoji} ${voted.label}`
+                          : "No vote yet"}
+                      </span>
+                    </span>
+                    {picked && <span style={{ fontSize: 18 }}>👑</span>}
+                  </button>
+                );
+              })}
+            </div>
+
+            {finalPick && (
+              <div
+                key={finalPick}
+                style={{
+                  marginTop: 18,
+                  padding: "16px 16px",
+                  borderRadius: 18,
+                  textAlign: "center",
+                  background: `linear-gradient(135deg, ${
+                    OPTIONS.find((o) => o.id === finalPick).accent
+                  }33, rgba(255,255,255,0.04))`,
+                  border: "1px solid rgba(255,255,255,0.14)",
+                  animation: "pop 380ms ease both",
+                }}
+              >
+                <div style={{ fontSize: 14, opacity: 0.85 }}>
+                  Your heart chose
+                </div>
+                <div style={{ fontSize: 19, fontWeight: 800, marginTop: 2 }}>
+                  {OPTIONS.find((o) => o.id === finalPick).emoji}{" "}
+                  {OPTIONS.find((o) => o.id === finalPick).title}
+                </div>
+                <div
+                  style={{
+                    fontSize: 12.5,
+                    opacity: 0.6,
+                    marginTop: 8,
+                    fontStyle: "italic",
+                  }}
+                >
+                  Noted, Miss Chelly. But the surprise clause still applies. 😌
+                </div>
+
+                <button
+                  className="pyp-btn"
+                  onClick={sendResult}
+                  style={{
+                    ...btnBase,
+                    width: "100%",
+                    marginTop: 14,
+                    padding: "15px",
+                    fontSize: 15.5,
+                    color: "#1a0e22",
+                    background: `linear-gradient(135deg, #fff, ${
+                      OPTIONS.find((o) => o.id === finalPick).accent
+                    })`,
+                    boxShadow: `0 12px 26px -10px ${
+                      OPTIONS.find((o) => o.id === finalPick).glow
+                    }`,
+                  }}
+                >
+                  {SEND_TO.includes("@")
+                    ? "Email my answer to you 📧"
+                    : "Text my answer to you 💬"}
+                </button>
+
+                <button
+                  className="pyp-btn"
+                  onClick={copyAnswer}
+                  style={{
+                    ...btnBase,
+                    width: "100%",
+                    marginTop: 8,
+                    padding: "12px",
+                    fontSize: 13.5,
+                    color: "#fff",
+                    background: "rgba(255,255,255,0.08)",
+                    border: "1px solid rgba(255,255,255,0.16)",
+                  }}
+                >
+                  {copied ? "Copied ✓ paste it anywhere" : "Or copy my answer instead"}
+                </button>
+                {copied && (
+                  <div
+                    style={{
+                      fontSize: 12,
+                      opacity: 0.7,
+                      marginTop: 8,
+                      textAlign: "center",
+                    }}
+                  >
+                    Your full verdict is copied — drop it in a text to me. 😌
+                  </div>
+                )}
+              </div>
+            )}
+
+            <button
+              className="pyp-btn"
+              onClick={reset}
+              style={{
+                ...btnBase,
+                width: "100%",
+                marginTop: 16,
+                padding: "13px",
+                fontSize: 14,
+                color: "#fff",
+                background: "rgba(255,255,255,0.08)",
+                border: "1px solid rgba(255,255,255,0.16)",
+              }}
+            >
+              ↺ Start over
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* NAV */}
+      {!isWelcome && (
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 440,
+            display: "flex",
+            gap: 12,
+            marginTop: 18,
+          }}
+        >
+          <button
+            className="pyp-btn"
+            onClick={() => go(-1)}
+            style={{
+              ...btnBase,
+              flex: 1,
+              padding: "15px",
+              fontSize: 15,
+              color: "#fff",
+              background: "rgba(255,255,255,0.07)",
+              border: "1px solid rgba(255,255,255,0.16)",
+            }}
+          >
+            ← Back
+          </button>
+          {!isVerdict && (
+            <button
+              className="pyp-btn"
+              onClick={() => go(1)}
+              style={{
+                ...btnBase,
+                flex: 2,
+                padding: "15px",
+                fontSize: 15,
+                color: "#1a0e22",
+                background: `linear-gradient(135deg, #fff, ${accent})`,
+                boxShadow: `0 12px 26px -10px ${glow}`,
+              }}
+            >
+              {step === TOTAL - 2 ? "See the verdict 👀" : "Next →"}
+            </button>
+          )}
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<PickYourPoison />);
+</script>
+</body>
+</html>
